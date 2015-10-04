@@ -1,33 +1,43 @@
 fn csv_to_xml(input: &str, delim: char, root_name: &str, row_name: &str, col_name: &str) -> String {
 	let mut output = String::new();
 
-	output.push('<');
-	output.push_str(root_name);
-	output.push('>');
+	output.open_elem(root_name);
 
 	for line in input.lines_any() {
-		output.push('<');
-		output.push_str(row_name);
-		output.push('>');
-		for value in line.split(delim) {
-			output.push('<');
-			output.push_str(col_name);
-			output.push('>');
-			output.push_str(value);
-			output.push_str("</");
-			output.push_str(col_name);
-			output.push('>');
-		}
-		output.push_str("</");
-		output.push_str(row_name);
-		output.push('>');
+		output.open_elem(row_name);
+		for value in line.split(delim) { output.full_elem(col_name, value);	}
+		output.close_elem(row_name);
 	}
 
-	output.push_str("</");
-	output.push_str(root_name);
-	output.push('>');
+	output.close_elem(root_name);
 
 	output
+}
+
+trait XmlStr {
+	fn open_elem(&mut self, elem_name: &str);
+	fn close_elem(&mut self, elem_name: &str);
+	fn full_elem(&mut self, elem_name: &str, elem_content: &str);
+}
+
+impl XmlStr for String {
+	fn open_elem(&mut self, elem_name: &str) {
+		self.push('<');
+		self.push_str(elem_name);
+		self.push('>');
+	}
+	
+	fn close_elem(&mut self, elem_name: &str) {
+		self.push_str("</");
+		self.push_str(elem_name);
+		self.push('>');
+	}
+	
+	fn full_elem(&mut self, elem_name: &str, elem_content: &str) {
+		self.open_elem(elem_name);
+		self.push_str(elem_content);
+		self.close_elem(elem_name);
+	}
 }
 
 #[cfg(test)]

@@ -1,0 +1,8 @@
+[package]
+name = "extract_fixed"
+version = "2.0.0"
+authors = ["c152216"]
+
+[[bin]]
+name = "extract_fixed"
+path = "src/main.rs"

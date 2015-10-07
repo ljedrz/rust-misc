@@ -20,5 +20,8 @@ fn is_prime(number: u64) -> bool {
 }
 
 fn main() {
-    println!("{}", factors(600851475143).iter().filter(|&f| is_prime(*f)).last().unwrap());
+    let result = factors(600851475143).iter().filter(|&f| is_prime(*f)).last().unwrap().clone();
+
+    assert_eq!(result, 6857);
+    println!("{}", result);
 }

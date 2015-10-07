@@ -13,5 +13,6 @@ fn main() {
         if c % 2 == 0 { sum += c; }
     }
 
+    assert_eq!(sum, 4613732);
     println!("{}", sum);
 }

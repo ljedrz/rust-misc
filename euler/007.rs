@@ -26,6 +26,7 @@ fn main() {
 		if is_prime(n) {
 			count += 1;
 			if count == 10001 {
+                assert_eq!(n, 104743);
 				println!("{}", n);
 				return;
 			}

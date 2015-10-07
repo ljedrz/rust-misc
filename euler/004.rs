@@ -19,5 +19,6 @@ fn main() {
         }
     }
 
+    assert_eq!(max, 906609);
     println!("{}", max);
 }

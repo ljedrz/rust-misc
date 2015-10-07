@@ -6,5 +6,9 @@
 // the square of the sum.
 
 fn main() {
-    println!("{}", (1u64..101).fold(0, |sum, acc| sum + acc).pow(2) - (1u64..101).map(|n| n.pow(2)).fold(0, |sum, acc| sum + acc));
+    let result = (1u64..101).fold(0, |sum, acc| sum + acc).pow(2) -
+        (1u64..101).map(|n| n.pow(2)).fold(0, |sum, acc| sum + acc);
+
+    assert_eq!(result, 25164150);
+    println!("{}", result);
 }

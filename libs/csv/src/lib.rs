@@ -11,15 +11,20 @@ fn vectorize_csv(csv: &str, delim: char) -> Vec<Vec<String>> {
 	csv_vec
 }
 
-fn csv_to_xml(input: &str, delim: char, root_name: &str, row_name: &str, col_name: &str) -> String {
+fn csv_to_xml(input: &str, delim: char, root_name: &str, header: Option<&[&str]>) -> String {
 	let mut output = String::new();
 
 	output.open_elem(root_name);
 
 	for line in input.lines_any() {
-		output.open_elem(row_name);
-		for value in line.split(delim) { output.full_elem(col_name, value);	}
-		output.close_elem(row_name);
+		output.open_elem("line");
+		for (index, value) in line.split(delim).enumerate() {
+			match header {
+				Some(fields) => output.full_elem(fields[index], value),
+				None => output.full_elem("field", value)
+			};
+		}
+		output.close_elem("line");
 	}
 
 	output.close_elem(root_name);
@@ -66,11 +71,20 @@ mod tests {
 	}
 
     #[test]
-    fn csv_to_xml_test() {
+    fn csv_to_xml_header() {
 		let test_str = "herp;derp\nhurr;durr";
-		let target = "<root><row><col>herp</col><col>derp</col></row>\
-			<row><col>hurr</col><col>durr</col></row></root>";
+		let target = "<root><line><field1>herp</field1><field2>derp</field2></line>\
+			<line><field1>hurr</field1><field2>durr</field2></line></root>";
 
-		assert_eq!(csv_to_xml(test_str, ';', "root", "row", "col"), target);
+		assert_eq!(csv_to_xml(test_str, ';', "root", Some(&["field1", "field2"])), target);
+	}
+
+	#[test]
+	fn csv_to_xml_noheader() {
+		let test_str = "herp;derp\nhurr;durr";
+		let target = "<root><line><field>herp</field><field>derp</field></line>\
+			<line><field>hurr</field><field>durr</field></line></root>";
+
+		assert_eq!(csv_to_xml(test_str, ';', "root", None), target);
 	}
 }

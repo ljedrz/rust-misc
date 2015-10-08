@@ -20,16 +20,16 @@ fn is_prime(number: u64) -> bool {
 }
 
 fn main() {
-	let mut count = 0;
+    let mut count = 0;
 
-	for n in (2u64..) {
-		if is_prime(n) {
-			count += 1;
-			if count == 10001 {
+    for n in (2u64..) {
+        if is_prime(n) {
+            count += 1;
+            if count == 10001 {
                 assert_eq!(n, 104743);
-				println!("{}", n);
-				return;
-			}
-		}
-	}
+                println!("{}", n);
+                return;
+            }
+        }
+    }
 }

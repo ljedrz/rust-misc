@@ -107,7 +107,8 @@ let numbers = [
     "20849603980134001723930671666823555245252804609722",
     "53503534226472524250874054075591789781264330331690"
     ];
-    let digits = numbers.iter().map(|l| l.chars().map(|c| c.to_digit(10).unwrap()).collect::<Vec<u32>>()).collect::<Vec<Vec<u32>>>();
+    let digits = numbers.iter().map(|l| l.chars().map(|c| c.to_digit(10).unwrap())
+        .collect::<Vec<u32>>()).collect::<Vec<Vec<u32>>>();
     let mut subsum = 0u32;
     let mut sum = Vec::with_capacity(52);
     let ten: String;

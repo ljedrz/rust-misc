@@ -348,13 +348,3 @@ fn play() {
 fn main() {
 	play()
 }
-
-/* tests */
-
-#[test]
-fn neighbor_listing() {
-	assert_eq!(Coords::new(1, 1).neighbors(2).len(), 3);
-	assert_eq!(Coords::new(1, 2).neighbors(2).len(), 3);
-	assert_eq!(Coords::new(2, 1).neighbors(2).len(), 3);
-	assert_eq!(Coords::new(2, 2).neighbors(2).len(), 3);
-}

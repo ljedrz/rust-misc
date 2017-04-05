@@ -2,6 +2,7 @@ use term::*;
 use term::Term::*;
 use term::Error::*;
 use booleans::*;
+use reduction::*;
 
 // PAIR := λxyf.f x y
 pub fn pair() -> Term { abs(abs(abs(Var(1).app(Var(3)).app(Var(2))))) }
@@ -165,15 +166,18 @@ impl Term {
 	}
 }
 
-/*
-pub fn from(elems: Vec<Term>) -> List {
-	let mut list = List::new();
+impl From<Vec<Term>> for Term {
+	fn from(terms: Vec<Term>) -> Self {
+		let mut output = nil();
 
-	for elem in elems.into_iter().rev() { list.push(elem); }
+		for t in terms {
+			output = cons().app(t).app(output);
+		}
 
-	list
+		normalize(output)
+	}
 }
-
+/*
 pub fn push(&mut self, term: Term) { // TODO: maybe no cloning?
 	let tail = self.0.clone();
 	*self = List(abs(app(Var(0), app(term, tail))))
@@ -196,7 +200,6 @@ impl Iterator for Term {
 mod test {
 	use super::*;
 	use arithmetic::*;
-	use reduction::*;
 
 	#[test]
 	fn empty_list() {
@@ -216,6 +219,15 @@ mod test {
 		assert_eq!(list2.len(), Ok(2));
 		let list3 = normalize(cons().app(one()).app(list2));
 		assert_eq!(list3.len(), Ok(3));
+	}
+
+	#[test]
+	fn list_from_vector() {
+		let terms_vec = vec![one(), zero(), one()];
+		let list_from_vec = Term::from(terms_vec);
+		let list_manual = normalize(cons().app(one()).app(cons().app(zero()).app(cons().app(one()).app(nil()))));
+
+		assert_eq!(list_from_vec, list_manual);
 	}
 
 	#[test]

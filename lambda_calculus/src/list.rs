@@ -164,6 +164,10 @@ impl Term {
 
 		Ok(n)
 	}
+
+	pub fn push(self, t: Term) -> Term {
+		normalize(cons().app(t).app(self))
+	}
 }
 
 impl From<Vec<Term>> for Term {
@@ -177,12 +181,6 @@ impl From<Vec<Term>> for Term {
 		normalize(output)
 	}
 }
-/*
-pub fn push(&mut self, term: Term) { // TODO: maybe no cloning?
-	let tail = self.0.clone();
-	*self = List(abs(app(Var(0), app(term, tail))))
-}
-*/
 /*
 impl Iterator for Term {
 	type Item = Term;
@@ -263,9 +261,17 @@ mod test {
 		assert_eq!(unconsed, Ok((to_cnum(3), normalize(cons().app(to_cnum(5)).app(cons().app(to_cnum(4)).app(nil()))))));
 	}
 
+	#[test]
+	fn list_push() {
+		let list_pushed = nil().push(one()).push(zero()).push(one());
+		let list_manual = normalize(cons().app(one()).app(cons().app(zero()).app(cons().app(one()).app(nil()))));
+
+		assert_eq!(list_pushed, list_manual);
+	}
+
 /*
 	#[test]
-	fn list_push_pop() {
+	fn list_pop() {
 		let mut list = List::from(vec![Var(1), Var(0), Var(1)]);
 
 		assert_eq!(list.pop(), Some(Var(1)));

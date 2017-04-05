@@ -7,25 +7,25 @@ use booleans::*;
 pub fn pair() -> Term { abs(abs(abs(Var(1).app(Var(3)).app(Var(2))))) }
 
 // FIRST := λp.p TRUE
-pub fn fst() -> Term { abs(Var(1).app(tru())) }
+pub fn first() -> Term { abs(Var(1).app(tru())) }
 
 // SECOND := λp.p FALSE
-pub fn snd() -> Term { abs(Var(1).app(fls())) }
+pub fn second() -> Term { abs(Var(1).app(fls())) }
 
 // NIL := λx.TRUE
 pub fn nil() -> Term { abs(tru()) }
 
 // NULL := λp.p (λxy.FALSE)
-pub fn is_empty() -> Term { abs(Var(1).app(abs(abs(fls())))) }
+pub fn null() -> Term { abs(Var(1).app(abs(abs(fls())))) }
 
 // CONS := λht.PAIR FALSE (PAIR h t)
 pub fn cons() -> Term { abs(abs(pair().app(fls()).app(pair().app(Var(2)).app(Var(1))))) }
 
 // HEAD := λz.FIRST (SECOND z)
-pub fn head() -> Term { abs(fst().app(snd().app(Var(1)))) }
+pub fn head() -> Term { abs(first().app(second().app(Var(1)))) }
 
 // TAIL := λz.SECOND (SECOND z)
-pub fn tail() -> Term { abs(snd().app(snd().app(Var(1)))) }
+pub fn tail() -> Term { abs(second().app(second().app(Var(1)))) }
 
 impl Term {
 	pub fn is_pair(&self) -> bool {
@@ -107,7 +107,7 @@ impl Term {
 	}
 
 	pub fn is_empty(&self) -> bool {
-		self.head_ref() == Ok(&nil())
+		*self == nil()
 	}
 
 	pub fn uncons(self) -> Result<(Term, Term), Error> {
@@ -153,7 +153,15 @@ impl Term {
 	}
 
 	pub fn len(&self) -> Result<usize, Error> {
-		unimplemented!()
+		let mut inner = self;
+		let mut n = 0;
+
+		while *inner != nil() {
+			n += 1;
+			inner = try!(inner.tail_ref());
+		}
+
+		Ok(n)
 	}
 }
 
@@ -164,15 +172,6 @@ pub fn from(elems: Vec<Term>) -> List {
 	for elem in elems.into_iter().rev() { list.push(elem); }
 
 	list
-}
-
-pub fn len(&self) -> usize { // TODO: maybe no cloning?
-	let mut copy = (*self).clone();
-	let mut n = 0;
-
-	while let Some(_) = copy.pop() { n += 1; }
-
-	n
 }
 
 pub fn push(&mut self, term: Term) { // TODO: maybe no cloning?
@@ -200,6 +199,26 @@ mod test {
 	use reduction::*;
 
 	#[test]
+	fn empty_list() {
+		let empty_list = nil();
+
+		assert!(empty_list.is_list());
+		assert!(empty_list.is_empty());
+	}
+
+	#[test]
+	fn list_length() {
+		let list0 = nil();
+		assert_eq!(list0.len(), Ok(0));
+		let list1 = normalize(cons().app(one()).app(list0));
+		assert_eq!(list1.len(), Ok(1));
+		let list2 = normalize(cons().app(one()).app(list1));
+		assert_eq!(list2.len(), Ok(2));
+		let list3 = normalize(cons().app(one()).app(list2));
+		assert_eq!(list3.len(), Ok(3));
+	}
+
+	#[test]
 	fn pair_operations() {
 		let pair_four_three = normalize(pair().app(to_cnum(4)).app(to_cnum(3)));
 
@@ -214,7 +233,10 @@ mod test {
 
 	#[test]
 	fn list_operations() {
-		let list_three_five_four = normalize(cons().app(to_cnum(3)).app(cons().app(to_cnum(5)).app(cons().app(to_cnum(4)).app(nil()))));
+		let empty_list = nil();
+		let list_four = cons().app(to_cnum(4)).app(empty_list);
+		let list_five_four = cons().app(to_cnum(5)).app(list_four);
+		let list_three_five_four = normalize(cons().app(to_cnum(3)).app(list_five_four));
 
 		assert!(list_three_five_four.is_list());
 
@@ -231,15 +253,6 @@ mod test {
 
 /*
 	#[test]
-	fn empty_list() {
-		let mut list = List::new();
-
-		assert!(list.is_empty());
-		list.push(Var(1));
-		assert!(!list.is_empty());
-	}
-
-	#[test]
 	fn list_push_pop() {
 		let mut list = List::from(vec![Var(1), Var(0), Var(1)]);
 
@@ -247,17 +260,6 @@ mod test {
 		assert_eq!(list.pop(), Some(Var(0)));
 		assert_eq!(list.pop(), Some(Var(1)));
 		assert_eq!(list.pop(), None);
-	}
-
-	#[test]
-	fn list_len() {
-		let mut list = List::new();
-
-		assert_eq!(list.len(), 0);
-		list.push(Var(0));
-		assert_eq!(list.len(), 1);
-		list.push(Var(0));
-		assert_eq!(list.len(), 2);
 	}
 
 	#[test]

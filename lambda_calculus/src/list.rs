@@ -49,6 +49,38 @@ impl Term {
 		}
 	}
 
+	pub fn unpair_ref(&self) -> Result<(&Term, &Term), Error> {
+		if let Abs(_) = *self {
+			if let Ok((wrapped_a, b)) = self.unabs_ref().and_then(|t| t.unapp_ref()) {
+				Ok((try!(wrapped_a.rhs_ref()), b))
+			} else {
+				Err(NotAPair)
+			}
+		} else {
+			if let Ok((wrapped_a, b)) = self.unapp_ref() {
+				Ok((try!(wrapped_a.rhs_ref()), b))
+			} else {
+				Err(NotAPair)
+			}
+		}
+	}
+
+	pub fn unpair_ref_mut(&mut self) -> Result<(&mut Term, &mut Term), Error> {
+		if let Abs(_) = *self {
+			if let Ok((wrapped_a, b)) = self.unabs_ref_mut().and_then(|t| t.unapp_ref_mut()) {
+				Ok((try!(wrapped_a.rhs_ref_mut()), b))
+			} else {
+				Err(NotAPair)
+			}
+		} else {
+			if let Ok((wrapped_a, b)) = self.unapp_ref_mut() {
+				Ok((try!(wrapped_a.rhs_ref_mut()), b))
+			} else {
+				Err(NotAPair)
+			}
+		}
+	}
+
 	pub fn fst(self) -> Result<Term, Error> {
 		if let Abs(_) = self {
 			self.unabs()
@@ -117,6 +149,18 @@ impl Term {
 			.and_then(|t| t.unpair())
 	}
 
+	pub fn uncons_ref(&self) -> Result<(&Term, &Term), Error> {
+		self.unabs_ref()
+			.and_then(|t| t.snd_ref())
+			.and_then(|t| t.unpair_ref())
+	}
+
+	pub fn uncons_ref_mut(&mut self) -> Result<(&mut Term, &mut Term), Error> {
+		self.unabs_ref_mut()
+			.and_then(|t| t.snd_ref_mut())
+			.and_then(|t| t.unpair_ref_mut())
+	}
+
 	pub fn head(self) -> Result<Term, Error> {
 		self.unabs()
 			.and_then(|t| t.snd())
@@ -168,6 +212,13 @@ impl Term {
 	pub fn push(self, t: Term) -> Term {
 		normalize(cons().app(t).app(self))
 	}
+
+	pub fn pop(&mut self) -> Result<Term, Error> {
+		let (head, tail) = try!(self.clone().uncons());
+		*self = tail;
+
+		Ok(head)
+	}
 }
 
 impl From<Vec<Term>> for Term {
@@ -218,6 +269,7 @@ mod test {
 
 		assert!(empty_list.is_list());
 		assert!(empty_list.is_empty());
+		assert!(empty_list.uncons().is_err());
 	}
 
 	#[test]
@@ -264,17 +316,17 @@ mod test {
 		assert_eq!(unconsed, Ok((to_cnum(3), Term::from(vec![to_cnum(5), to_cnum(4)]))));
 	}
 
-/*
+
 	#[test]
 	fn list_pop() {
-		let mut list = List::from(vec![Var(1), Var(0), Var(1)]);
+		let mut list_poppable = Term::from(vec![one(), zero(), zero()]);
 
-		assert_eq!(list.pop(), Some(Var(1)));
-		assert_eq!(list.pop(), Some(Var(0)));
-		assert_eq!(list.pop(), Some(Var(1)));
-		assert_eq!(list.pop(), None);
+		assert_eq!(list_poppable.pop(), Ok(one()));
+		assert_eq!(list_poppable.pop(), Ok(zero()));
+		assert_eq!(list_poppable.pop(), Ok(zero()));
+		assert!(list_poppable.pop().is_err());
 	}
-
+/*
 	#[test]
 	fn iterating_list() {
 		let list = List::from(vec![Var(0), Var(1), Var(0)]);

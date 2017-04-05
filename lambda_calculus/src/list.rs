@@ -82,119 +82,99 @@ impl Term {
 	}
 
 	pub fn fst(self) -> Result<Term, Error> {
-		if let Abs(_) = self {
-			self.unabs()
-				.and_then(|t| t.lhs())
-				.and_then(|t| t.rhs())
-		} else {
-			self.lhs().and_then(|t| t.rhs())
-		}
+		Ok(try!(self.unpair()).0)
 	}
 
 	pub fn fst_ref(&self) -> Result<&Term, Error> {
-		if let Abs(_) = *self {
-			self.unabs_ref()
-				.and_then(|t| t.lhs_ref())
-				.and_then(|t| t.rhs_ref())
-		} else {
-			self.lhs_ref().and_then(|t| t.rhs_ref())
-		}
+		Ok(try!(self.unpair_ref()).0)
 	}
 
 	pub fn fst_ref_mut(&mut self) -> Result<&mut Term, Error> {
-		if let Abs(_) = *self {
-			self.unabs_ref_mut()
-				.and_then(|t| t.lhs_ref_mut())
-				.and_then(|t| t.rhs_ref_mut())
-		} else {
-			self.lhs_ref_mut().and_then(|t| t.rhs_ref_mut())
-		}
+		Ok(try!(self.unpair_ref_mut()).0)
 	}
 
 	pub fn snd(self) -> Result<Term, Error> {
-		if let Abs(_) = self {
-			self.unabs().and_then(|t| t.rhs())
-		} else {
-			self.rhs()
-		}
+		Ok(try!(self.unpair()).1)
 	}
 
 	pub fn snd_ref(&self) -> Result<&Term, Error> {
-		if let Abs(_) = *self {
-			self.unabs_ref().and_then(|t| t.rhs_ref())
-		} else {
-			self.rhs_ref()
-		}
+		Ok(try!(self.unpair_ref()).1)
 	}
 
 	pub fn snd_ref_mut(&mut self) -> Result<&mut Term, Error> {
-		if let Abs(_) = *self {
-			self.unabs_ref_mut().and_then(|t| t.rhs_ref_mut())
-		} else {
-			self.rhs_ref_mut()
+		Ok(try!(self.unpair_ref_mut()).1)
+	}
+
+	pub fn last_ref(&self) -> Result<&Term, Error> {
+		let mut last_candidate = try!(self.snd_ref());
+
+		while let Ok(ref second) = last_candidate.snd_ref() {
+			last_candidate = *second;
 		}
+
+		Ok(last_candidate)
 	}
 
-	pub fn is_list(&self) -> bool {
-		self.is_empty() || self.head_ref().is_ok() && self.tail_ref().is_ok()
-	}
-
-	pub fn is_empty(&self) -> bool {
+	pub fn is_nil(&self) -> bool {
 		*self == nil()
 	}
 
+	pub fn is_list(&self) -> bool {
+		self.is_pair() && self.last_ref() == Ok(&nil())
+	}
+
 	pub fn uncons(self) -> Result<(Term, Term), Error> {
-		self.unabs()
-			.and_then(|t| t.snd())
-			.and_then(|t| t.unpair())
+		if !self.is_list() {
+			Err(NotAList)
+		} else {
+			self.unabs()
+				.and_then(|t| t.snd())
+				.and_then(|t| t.unpair())
+		}
 	}
 
 	pub fn uncons_ref(&self) -> Result<(&Term, &Term), Error> {
-		self.unabs_ref()
-			.and_then(|t| t.snd_ref())
-			.and_then(|t| t.unpair_ref())
+		if !self.is_list() {
+			Err(NotAList)
+		} else {
+			self.unabs_ref()
+				.and_then(|t| t.snd_ref())
+				.and_then(|t| t.unpair_ref())
+		}
 	}
 
 	pub fn uncons_ref_mut(&mut self) -> Result<(&mut Term, &mut Term), Error> {
-		self.unabs_ref_mut()
-			.and_then(|t| t.snd_ref_mut())
-			.and_then(|t| t.unpair_ref_mut())
+		if !self.is_list() {
+			Err(NotAList)
+		} else {
+			self.unabs_ref_mut()
+				.and_then(|t| t.snd_ref_mut())
+				.and_then(|t| t.unpair_ref_mut())
+		}
 	}
 
 	pub fn head(self) -> Result<Term, Error> {
-		self.unabs()
-			.and_then(|t| t.snd())
-			.and_then(|t| t.fst())
+		Ok(try!(self.uncons()).0)
 	}
 
 	pub fn head_ref(&self) -> Result<&Term, Error> {
-		self.unabs_ref()
-			.and_then(|t| t.snd_ref())
-			.and_then(|t| t.fst_ref())
+		Ok(try!(self.uncons_ref()).0)
 	}
 
 	pub fn head_ref_mut(&mut self) -> Result<&mut Term, Error> {
-		self.unabs_ref_mut()
-			.and_then(|t| t.snd_ref_mut())
-			.and_then(|t| t.fst_ref_mut())
+		Ok(try!(self.uncons_ref_mut()).0)
 	}
 
 	pub fn tail(self) -> Result<Term, Error> {
-		self.unabs()
-			.and_then(|t| t.snd())
-			.and_then(|t| t.snd())
+		Ok(try!(self.uncons()).1)
 	}
 
 	pub fn tail_ref(&self) -> Result<&Term, Error> {
-		self.unabs_ref()
-			.and_then(|t| t.snd_ref())
-			.and_then(|t| t.snd_ref())
+		Ok(try!(self.uncons_ref()).1)
 	}
 
 	pub fn tail_ref_mut(&mut self) -> Result<&mut Term, Error> {
-		self.unabs_ref_mut()
-			.and_then(|t| t.snd_ref_mut())
-			.and_then(|t| t.snd_ref_mut())
+		Ok(try!(self.uncons_ref_mut()).1)
 	}
 
 	pub fn len(&self) -> Result<usize, Error> {
@@ -237,14 +217,14 @@ impl Iterator for Term {
 	type Item = Term;
 
 	fn next(&mut self) -> Option<Term> {
-		if self.is_empty() {
+		if self.is_nil() {
 			None
 		} else {
 			self.pop()
 		}
 	}
-}
-*/
+}*/
+
 #[cfg(test)]
 mod test {
 	use super::*;
@@ -265,11 +245,11 @@ mod test {
 
 	#[test]
 	fn empty_list() {
-		let empty_list = nil();
+		let nil = nil();
 
-		assert!(empty_list.is_list());
-		assert!(empty_list.is_empty());
-		assert!(empty_list.uncons().is_err());
+		assert!(nil.is_nil());
+		assert!(!nil.is_list());
+		assert_eq!(nil.uncons(), Err(NotAList));
 	}
 
 	#[test]
@@ -326,6 +306,7 @@ mod test {
 		assert_eq!(list_poppable.pop(), Ok(zero()));
 		assert!(list_poppable.pop().is_err());
 	}
+
 /*
 	#[test]
 	fn iterating_list() {

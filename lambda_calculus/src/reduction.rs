@@ -1,5 +1,4 @@
 use term::*;
-use term::Term;
 use term::Term::*;
 use self::Closure::*;
 use self::Expression::*;

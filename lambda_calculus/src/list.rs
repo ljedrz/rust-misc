@@ -1,5 +1,4 @@
 use term::*;
-use term::{Term, Error};
 use term::Term::*;
 use term::Error::*;
 use booleans::*;

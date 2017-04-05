@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use term::*;
 use term::Term::*;
 use term::Error::*;

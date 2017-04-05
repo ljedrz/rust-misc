@@ -212,7 +212,7 @@ impl From<Vec<Term>> for Term {
 		normalize(output)
 	}
 }
-/*
+
 impl Iterator for Term {
 	type Item = Term;
 
@@ -220,10 +220,10 @@ impl Iterator for Term {
 		if self.is_nil() {
 			None
 		} else {
-			self.pop()
+			Some(self.pop().unwrap())
 		}
 	}
-}*/
+}
 
 #[cfg(test)]
 mod test {
@@ -304,18 +304,18 @@ mod test {
 		assert_eq!(list_poppable.pop(), Ok(one()));
 		assert_eq!(list_poppable.pop(), Ok(zero()));
 		assert_eq!(list_poppable.pop(), Ok(zero()));
-		assert!(list_poppable.pop().is_err());
+		assert_eq!(list_poppable.pop(), Err(NotAList));
 	}
 
-/*
 	#[test]
 	fn iterating_list() {
-		let list = List::from(vec![Var(0), Var(1), Var(0)]);
-		let mut iter = list.into_iter();
+		let list010 = Term::from(vec![zero(), one(), zero()]);
+		let mut iter = list010.into_iter();
 
-		assert_eq!(iter.next(), Some(Var(0)));
-		assert_eq!(iter.next(), Some(Var(1)));
-		assert_eq!(iter.next(), Some(Var(0)));
+		assert_eq!(iter.next(), Some(zero()));
+		assert_eq!(iter.next(), Some(one()));
+		assert_eq!(iter.next(), Some(zero()));
+		assert_eq!(iter.next(), None);
 	}
-*/
+
 }

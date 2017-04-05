@@ -174,7 +174,7 @@ impl From<Vec<Term>> for Term {
 	fn from(terms: Vec<Term>) -> Self {
 		let mut output = nil();
 
-		for t in terms {
+		for t in terms.into_iter().rev() {
 			output = cons().app(t).app(output);
 		}
 
@@ -200,35 +200,6 @@ mod test {
 	use arithmetic::*;
 
 	#[test]
-	fn empty_list() {
-		let empty_list = nil();
-
-		assert!(empty_list.is_list());
-		assert!(empty_list.is_empty());
-	}
-
-	#[test]
-	fn list_length() {
-		let list0 = nil();
-		assert_eq!(list0.len(), Ok(0));
-		let list1 = normalize(cons().app(one()).app(list0));
-		assert_eq!(list1.len(), Ok(1));
-		let list2 = normalize(cons().app(one()).app(list1));
-		assert_eq!(list2.len(), Ok(2));
-		let list3 = normalize(cons().app(one()).app(list2));
-		assert_eq!(list3.len(), Ok(3));
-	}
-
-	#[test]
-	fn list_from_vector() {
-		let terms_vec = vec![one(), zero(), one()];
-		let list_from_vec = Term::from(terms_vec);
-		let list_manual = normalize(cons().app(one()).app(cons().app(zero()).app(cons().app(one()).app(nil()))));
-
-		assert_eq!(list_from_vec, list_manual);
-	}
-
-	#[test]
 	fn pair_operations() {
 		let pair_four_three = normalize(pair().app(to_cnum(4)).app(to_cnum(3)));
 
@@ -242,31 +213,55 @@ mod test {
 	}
 
 	#[test]
-	fn list_operations() {
+	fn empty_list() {
 		let empty_list = nil();
-		let list_four = cons().app(to_cnum(4)).app(empty_list);
-		let list_five_four = cons().app(to_cnum(5)).app(list_four);
-		let list_three_five_four = normalize(cons().app(to_cnum(3)).app(list_five_four));
 
-		assert!(list_three_five_four.is_list());
-
-		assert_eq!(list_three_five_four.head_ref(), Ok(&to_cnum(3)));
-		assert_eq!(list_three_five_four.tail_ref(), Ok(&normalize(cons().app(to_cnum(5)).app(cons().app(to_cnum(4)).app(nil())))));
-
-		assert_eq!(list_three_five_four.tail_ref().and_then(|t| t.head_ref()), Ok(&to_cnum(5)));
-		assert_eq!(list_three_five_four.tail_ref().and_then(|t| t.head_ref()), Ok(&to_cnum(5)));
-		assert_eq!(list_three_five_four.tail_ref().and_then(|t| t.tail_ref()).and_then(|t| t.head_ref()), Ok(&to_cnum(4)));
-
-		let unconsed = list_three_five_four.uncons();
-		assert_eq!(unconsed, Ok((to_cnum(3), normalize(cons().app(to_cnum(5)).app(cons().app(to_cnum(4)).app(nil()))))));
+		assert!(empty_list.is_list());
+		assert!(empty_list.is_empty());
 	}
 
 	#[test]
 	fn list_push() {
-		let list_pushed = nil().push(one()).push(zero()).push(one());
-		let list_manual = normalize(cons().app(one()).app(cons().app(zero()).app(cons().app(one()).app(nil()))));
+		let list_pushed = nil().push(zero()).push(one()).push(one());
+		let list_manual = normalize(cons().app(one()).app(cons().app(one()).app(cons().app(zero()).app(nil()))));
 
 		assert_eq!(list_pushed, list_manual);
+	}
+
+	#[test]
+	fn list_from_vector() {
+		let list_from_vec = Term::from(vec![one(), one(), zero()]);
+		let list_pushed = nil().push(zero()).push(one()).push(one());
+
+		assert_eq!(list_from_vec, list_pushed);
+	}
+
+	#[test]
+	fn list_length() {
+		let list0 = nil();
+		assert_eq!(list0.len(), Ok(0));
+		let list1 = list0.push(one());
+		assert_eq!(list1.len(), Ok(1));
+		let list2 = list1.push(one());
+		assert_eq!(list2.len(), Ok(2));
+		let list3 = list2.push(one());
+		assert_eq!(list3.len(), Ok(3));
+	}
+
+	#[test]
+	fn list_operations() {
+		let list_three_five_four = Term::from(vec![to_cnum(3), to_cnum(5), to_cnum(4)]);
+
+		assert!(list_three_five_four.is_list());
+
+		assert_eq!(list_three_five_four.head_ref(), Ok(&to_cnum(3)));
+		assert_eq!(list_three_five_four.tail_ref(), Ok(&Term::from(vec![to_cnum(5), to_cnum(4)])));
+
+		assert_eq!(list_three_five_four.tail_ref().and_then(|t| t.head_ref()), Ok(&to_cnum(5)));
+		assert_eq!(list_three_five_four.tail_ref().and_then(|t| t.tail_ref()).and_then(|t| t.head_ref()), Ok(&to_cnum(4)));
+
+		let unconsed = list_three_five_four.uncons();
+		assert_eq!(unconsed, Ok((to_cnum(3), Term::from(vec![to_cnum(5), to_cnum(4)]))));
 	}
 
 /*

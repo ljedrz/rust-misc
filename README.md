@@ -1,3 +1,5 @@
+![CC0 License](https://img.shields.io/badge/license-CC0-lightgrey.svg)
+
 Generic stuff written in Rust:
 
 - a simple Brainfuck interpreter
@@ -7,5 +9,3 @@ Generic stuff written in Rust:
 - a simple CSV-to-XML tool
 - a minesweeper game
 - a simple implementation of Peano numbers
-
-![CC0 License](https://img.shields.io/badge/license-CC0-lightgrey.svg)
